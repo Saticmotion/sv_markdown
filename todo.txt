@@ -1,0 +1,20 @@
+See http://spec.commonmark.org/0.25/ for referenced examples.
+
+ATX Headings
+	[X] (30) Simple heading
+	[~] (31) More than 6 #
+	[~] (32) Space between # and heading
+	[~] (33) No tab between # and heading
+	[ ] (34) Escaping #
+	[ ] (35) Parsing inlines
+	[X] (36) Leading and trailing spaces
+	[ ] (37) Max 3 spaces before #
+	[ ] (40) Closing sequence of #
+	[ ] (41) Closing sequence not same size
+	[ ] (42) Spaces after closing sequence
+	[ ] (43) No other chars after closing sequence
+	[ ] (44) Space before closing sequence
+	[ ] (45) Escaped closing sequence
+	[ ] (47) Heading in paragraph
+	[X] (48) Empty heading
+Setext Headings
