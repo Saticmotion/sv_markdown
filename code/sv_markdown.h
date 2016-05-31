@@ -138,6 +138,41 @@ static char* sv_normalize_line_endings(char* text)
 	return cleaned;
 }
 
+static void parse_thematic_break(sv_tokenizer* tokenizer, sv_token* token, const char breakCharacter)
+{
+	token->type = SV_TOKEN_THEMATIC_BREAK;
+
+	uint32_t breakTokenCount = 1;
+	uint32_t charCount = 1;
+
+	while (tokenizer->at[charCount] != '\0' &&
+		tokenizer->at[charCount] != '\n')
+	{
+		if (tokenizer->at[charCount] == breakCharacter)
+		{
+			breakTokenCount++;
+			charCount++;
+		}
+		else if (tokenizer->at[charCount] == ' ')
+		{
+			charCount++;
+		}
+		else
+		{
+			token->type = SV_TOKEN_PARAGRAPH;
+		}
+	}
+
+	if (breakTokenCount < 3)
+	{
+		token->type = SV_TOKEN_PARAGRAPH;
+	}
+	else
+	{
+		tokenizer->at += charCount + 1;
+	}
+}
+
 static sv_token sv_get_token(sv_tokenizer* tokenizer)
 {
 	sv_token token = {0};
@@ -150,6 +185,7 @@ static sv_token sv_get_token(sv_tokenizer* tokenizer)
 		case '#': //ATX headings
 		{
 			sv_uint32 headingCounter = 1;
+
 			while (tokenizer->at[headingCounter] &&
 				tokenizer->at[headingCounter] == '#')
 			{
@@ -188,63 +224,31 @@ static sv_token sv_get_token(sv_tokenizer* tokenizer)
 				}
 				else
 				{
-					//paragraph
+					token.type = SV_TOKEN_PARAGRAPH;
 				}
 			}
 			else
 			{
-				//paragraph
+				token.type = SV_TOKEN_PARAGRAPH;
 			}
 		} break;
 		case '*': //Thematic breaks
 		{
-			token.type = SV_TOKEN_THEMATIC_BREAK;
-
-			uint32_t breakTokenCount = 1;
-
-			while (tokenizer->at[breakTokenCount] == '*')
-			{
-				breakTokenCount++;
-			}
-
-			if (breakTokenCount < 3)
-			{
-				//paragraph
-			}
-			else
-			{
-				token.length += breakTokenCount - 1;
-			}
-		}
+			parse_thematic_break(tokenizer, &token, '*');
+		} break;
 		case '-':
+		{
+			parse_thematic_break(tokenizer, &token, '-');
+		} break;
 		case '_':
-
+		{
+			parse_thematic_break(tokenizer, &token, '_');
+		} break;
 
 		default: {} break;
 	}
 
 	return token;
-}
-
-static char* sv_emit_token(sv_token* token)
-{
-	char* result;
-	switch (token->type)
-	{
-		case SV_TOKEN_HEADING1:
-		{
-			size_t resultLength = token->length + 10; //9 heading, 1 null
-			result = (char*)malloc(resultLength);
-			sprintf(result, "<h1>%.*s</h1>\n", token->length, token->text);
-
-		} break;
-		case SV_TOKEN_HEADING2: {} break;
-		case SV_TOKEN_HEADING3: {} break;
-		case SV_TOKEN_HEADING4: {} break;
-		case SV_TOKEN_HEADING5: {} break;
-		case SV_TOKEN_HEADING6: {} break;
-	}
-	return result;
 }
 
 extern char* sv_compile_ast(char* markdown)
@@ -273,6 +277,9 @@ extern char* sv_compile_ast(char* markdown)
 			case SV_TOKEN_HEADING4: {printf("<h4>%.*s</h4>\n", token.length, token.text); } break;
 			case SV_TOKEN_HEADING5: {printf("<h5>%.*s</h5>\n", token.length, token.text); } break;
 			case SV_TOKEN_HEADING6: {printf("<h6>%.*s</h6>\n", token.length, token.text); } break;
+
+			case SV_TOKEN_THEMATIC_BREAK: {printf("<hr />\n"); } break;
+			case SV_TOKEN_PARAGRAPH: {printf("paragraph!\n"); } break;
 
 			default:
 			{
