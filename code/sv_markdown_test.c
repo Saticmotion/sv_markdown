@@ -8,17 +8,22 @@
 
 int main(int argc, char** argv[])
 {
-	char* input = "# hai!             \n"
-				  "##       hai!     \n"
-				  "### hai!                       \r"
-				  "####            hai!           \r\n"
-				  "##### hai!        \r"
-				  "######        hai!         \n"
-				  "## ";
+	char* headerTest =	"# hai!             \n"
+						"##       hai!     \n"
+						"### hai!                       \r"
+						"####            hai!           \r\n"
+						"##### hai!        \r"
+						"######        hai!         \n"
+						"# \n"
+						"## \n"
+						"### \n"
+						"#### \n"
+						"##### \n"
+						"###### ";
 
-	printf(input);
+	printf("%s\n", headerTest);
 
-	sv_compile_ast(input);
+	sv_compile_ast(headerTest);
 
 	getchar();
 }

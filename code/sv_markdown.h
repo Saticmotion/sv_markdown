@@ -10,21 +10,23 @@
 #include <stdbool.h>
 #include <string.h>
 #include <stdio.h>
+#include <math.h>
 
 typedef uint32_t sv_uint32;
 typedef int32_t sv_int32;
 
 typedef enum
 {
-	SV_TOKEN_TEST = 1,
-	SV_TOKEN_HEADING1 = 2,
-	SV_TOKEN_HEADING2 = 3,
-	SV_TOKEN_HEADING3 = 4,
-	SV_TOKEN_HEADING4 = 5,
-	SV_TOKEN_HEADING5 = 6,
-	SV_TOKEN_HEADING6 = 7,
-	SV_TOKEN_PARAGRAPH = 8,
-	SV_TOKEN_EOF = 9
+	SV_TOKEN_TEST,
+	SV_TOKEN_HEADING1,
+	SV_TOKEN_HEADING2,
+	SV_TOKEN_HEADING3,
+	SV_TOKEN_HEADING4,
+	SV_TOKEN_HEADING5,
+	SV_TOKEN_HEADING6,
+	SV_TOKEN_THEMATIC_BREAK,
+	SV_TOKEN_PARAGRAPH,
+	SV_TOKEN_EOF
 } sv_token_type;
 
 typedef struct sv_token
@@ -43,7 +45,7 @@ static void sv_trim_space_begin(sv_token* token)
 {
 	if (token->length > 0)
 	{
-		while(token->text[0] == ' ')
+		while (token->text[0] == ' ')
 		{
 			token->text++;
 			token->length--;
@@ -55,7 +57,7 @@ static void sv_trim_whitespace_begin(sv_token* token)
 {
 	if (token->length > 0)
 	{
-		while(token->text[0] == ' ' ||
+		while (token->text[0] == ' ' ||
 			token->text[0] == '\n' ||
 			token->text[0] == '\r' ||
 			token->text[0] == '\t' ||
@@ -74,7 +76,7 @@ static void sv_trim_space_end(sv_token* token)
 	{
 		sv_uint32 pos = token->length - 1;
 
-		while(token->text[pos] == ' ')
+		while (token->text[pos] == ' ')
 		{
 			pos--;
 		}
@@ -89,7 +91,7 @@ static void sv_trim_whitespace_end(sv_token* token)
 	{
 		sv_uint32 pos = token->length - 1;
 
-		while(token->text[pos] == ' ' ||
+		while (token->text[pos] == ' ' ||
 			token->text[pos] == '\n' ||
 			token->text[pos] == '\r' ||
 			token->text[pos] == '\t' ||
@@ -103,7 +105,40 @@ static void sv_trim_whitespace_end(sv_token* token)
 	}
 }
 
-static sv_token sv_getToken(sv_tokenizer* tokenizer)
+static char* sv_normalize_line_endings(char* text)
+{
+	size_t length = strlen(text);
+
+	sv_uint32 sourceAt = 0;
+	sv_uint32 destAt = 0;
+
+	char* cleaned = malloc(length);
+
+	while (sourceAt < length)
+	{
+		if (text[sourceAt] == '\r' && text[sourceAt + 1] == '\n')
+		{
+			cleaned[destAt++] = '\n';
+			sourceAt += 2;
+		}
+		else if (text[sourceAt] == '\r')
+		{
+			cleaned[destAt++] = '\n';
+			sourceAt++;;
+		}
+		else
+		{
+			cleaned[destAt++] = text[sourceAt++];
+		}
+	}
+
+	cleaned[destAt] = '\0';
+	realloc(cleaned, destAt + 1);
+
+	return cleaned;
+}
+
+static sv_token sv_get_token(sv_tokenizer* tokenizer)
 {
 	sv_token token = {0};
 	token.length = 1;
@@ -112,7 +147,7 @@ static sv_token sv_getToken(sv_tokenizer* tokenizer)
 	switch(tokenizer->at[0])
 	{
 		case '\0': {token.type = SV_TOKEN_EOF;} break;
-		case '#':
+		case '#': //ATX headings
 		{
 			sv_uint32 headingCounter = 1;
 			while (tokenizer->at[headingCounter] &&
@@ -133,13 +168,8 @@ static sv_token sv_getToken(sv_tokenizer* tokenizer)
 
 					while (tokenizer->at[0] != '\0')
 					{
-						if ((tokenizer->at[0] == '\n') ||
-							(tokenizer->at[0] == '\r'))
+						if (tokenizer->at[0] == '\n')
 						{
-							if (tokenizer->at[0] == '\r' && tokenizer->at[1] == '\n')
-							{
-								tokenizer->at++;
-							}
 							break;
 						}
 						else
@@ -166,6 +196,29 @@ static sv_token sv_getToken(sv_tokenizer* tokenizer)
 				//paragraph
 			}
 		} break;
+		case '*': //Thematic breaks
+		{
+			token.type = SV_TOKEN_THEMATIC_BREAK;
+
+			uint32_t breakTokenCount = 1;
+
+			while (tokenizer->at[breakTokenCount] == '*')
+			{
+				breakTokenCount++;
+			}
+
+			if (breakTokenCount < 3)
+			{
+				//paragraph
+			}
+			else
+			{
+				token.length += breakTokenCount - 1;
+			}
+		}
+		case '-':
+		case '_':
+
 
 		default: {} break;
 	}
@@ -173,7 +226,7 @@ static sv_token sv_getToken(sv_tokenizer* tokenizer)
 	return token;
 }
 
-static char* sv_emitToken(sv_token* token)
+static char* sv_emit_token(sv_token* token)
 {
 	char* result;
 	switch (token->type)
@@ -197,15 +250,16 @@ static char* sv_emitToken(sv_token* token)
 extern char* sv_compile_ast(char* markdown)
 {
 	sv_tokenizer tokenizer = {0};
-	tokenizer.at = markdown;
+	char* cleaned = sv_normalize_line_endings(markdown);
+	tokenizer.at = cleaned;
 
 	bool parsing = true;
 
 	char* result = "";
 
-	while(parsing)
+	while (parsing)
 	{
-		sv_token token = sv_getToken(&tokenizer);
+		sv_token token = sv_get_token(&tokenizer);
 
 		switch(token.type)
 		{

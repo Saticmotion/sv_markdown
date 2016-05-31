@@ -1,3 +1,6 @@
 /[Bb]uild
 /[Tt]est
 *.sln
+*.suo
+*.sdf
+*.opendb
