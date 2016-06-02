@@ -25,7 +25,14 @@ int main(int argc, char** argv[])
 						"___ \n"
 						"* * * \n"
 						"_     _    _ \n"
-						"--------- \n";
+						"--------- \n"
+						"This is a single line paragraph \n\n"
+						"This is a multiline paragraph\n"
+						"This is a multiline paragraph\n"
+						"This is a multiline paragraph\n\n"
+						"This is another multiline paragraph\n"
+						"This is another multiline paragraph\n"
+						"This is another multiline paragraph\n\n";
 
 	printf("%s\n", headerTest);
 

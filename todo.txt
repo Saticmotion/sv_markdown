@@ -22,3 +22,4 @@ ATX Headings
 	[X] (48) 	Empty heading
 Setext Headings
 
+FIX PARAGRAPHS NEAR EOF!
