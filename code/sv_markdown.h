@@ -112,7 +112,10 @@ static char* sv_normalize_line_endings(char* text)
 	sv_uint32 sourceAt = 0;
 	sv_uint32 destAt = 0;
 
-	char* cleaned = malloc(length);
+	sv_uint32 newlinesToAdd = 0;
+
+	//+2 for possibly inserting newlines at end.
+	char* cleaned = malloc(length + 2);
 
 	while (sourceAt < length)
 	{
@@ -129,6 +132,25 @@ static char* sv_normalize_line_endings(char* text)
 		else
 		{
 			cleaned[destAt++] = text[sourceAt++];
+		}
+	}
+
+	if (cleaned[destAt - 1] == '\n' && cleaned[destAt - 2] != '\n')
+	{
+		newlinesToAdd = 1;
+	}
+
+	if (cleaned[destAt - 1] != '\n')
+	{
+		newlinesToAdd = 2;
+	}
+
+	if (newlinesToAdd > 0)
+	{
+		cleaned[destAt++] = '\n';
+		if (newlinesToAdd > 1)
+		{
+			cleaned[destAt++] = '\n';
 		}
 	}
 
@@ -151,14 +173,6 @@ static void sv_parse_paragraph(sv_tokenizer* tokenizer, sv_token* token)
 		else
 		{
 			break;
-		}
-	}
-
-	if (tokenizer->at[charCount] == '\0')
-	{
-		if (tokenizer->at[charCount - 1] == '\n')
-		{
-			charCount -= 2;
 		}
 	}
 
@@ -220,9 +234,6 @@ static void sv_parse_atx_headers(sv_tokenizer* tokenizer, sv_token* token)
 	{
 		if (tokenizer->at[headingCounter] == ' ')
 		{
-			token->type = SV_TOKEN_HEADING1 + (headingCounter - 1);
-			token->text = &tokenizer->at[headingCounter + 1];
-
 			while (tokenizer->at[headingCounter + charCount] != '\0')
 			{
 				if (tokenizer->at[headingCounter + charCount] == '\n')
@@ -235,9 +246,11 @@ static void sv_parse_atx_headers(sv_tokenizer* tokenizer, sv_token* token)
 				}
 			}
 
+			token->type = SV_TOKEN_HEADING1 + (headingCounter - 1);
+			token->text = &tokenizer->at[headingCounter + 1];
 			//NOTE(Simon): - 1 to get rid of newline
 			token->length = charCount - 1;
-			//NOTE(Simon): + 1 to skip past newline
+			//NOTE(Simon): + 1 to skip tokenizer past newline
 			tokenizer->at += charCount + headingCounter + 1;
 
 			sv_trim_space_end(token);
@@ -262,28 +275,33 @@ static sv_token sv_get_token(sv_tokenizer* tokenizer)
 
 	switch(tokenizer->at[0])
 	{
-		case '\0': {token.type = SV_TOKEN_EOF;} break;
+		case '\0': {token.type = SV_TOKEN_EOF; break;}
 		case '#': //ATX headings
 		{
 			sv_parse_atx_headers(tokenizer, &token);
-		} break;
+			break;
+		}
 		case '*': //Thematic breaks
 		{
 			sv_parse_thematic_break(tokenizer, &token, '*');
-		} break;
+			break;
+		}
 		case '-': //Thematic breaks
 		{
 			sv_parse_thematic_break(tokenizer, &token, '-');
-		} break;
+			break;
+		}
 		case '_': //Thematic breaks
 		{
 			sv_parse_thematic_break(tokenizer, &token, '_');
-		} break;
+			break;
+		}
 
 		default:
 		{
 			sv_parse_paragraph(tokenizer, &token);
-		} break;
+			break;
+		}
 	}
 
 	return token;
@@ -328,4 +346,5 @@ extern char* sv_compile_ast(char* markdown)
 
 	return result;
 }
+
 #endif

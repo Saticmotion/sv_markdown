@@ -2,6 +2,7 @@ See http://spec.commonmark.org/0.25/ for referenced examples.
 
 Misc
 	[X] 		Normalize line endings
+	[X]			Make sure file ends in \n\n
 
 ATX Headings
 	[X] (30) 	Simple heading
@@ -22,4 +23,5 @@ ATX Headings
 	[X] (48) 	Empty heading
 Setext Headings
 
-FIX PARAGRAPHS NEAR EOF!
+Paragraphs
+	[X] ()		Parse anything not in other category as paragraph
