@@ -25,3 +25,12 @@ Setext Headings
 
 Paragraphs
 	[X] ()		Parse anything not in other category as paragraph
+	[X] (179) 	single line paragraph
+	[X] (180) 	multiline paragraph
+	[X] (181) 	More than 2 \n have no effect
+	[X] (182) 	Skip leading spaces
+	[ ] (183) 	Lines after L1 can have any number of spaces. But strip those
+	[ ] (184) 	Max 3 leading spaces, else code
+	[ ] (185) 	Same
+	[X] (186) 	Strip final spaces, so no hard break at last line in paragraph
+	[ ] () 		Don't strip in other lines: make them <br> if 2 or more spaces

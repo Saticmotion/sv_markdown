@@ -14,6 +14,7 @@ int main(int argc, char** argv[])
 						"####            hai!           \r\n"
 						"##### hai!        \r"
 						"######        hai!         \n"
+						"#######        hai!         \n\n"
 						"# \n"
 						"## \n"
 						"### \n"
@@ -26,13 +27,13 @@ int main(int argc, char** argv[])
 						"* * * \n"
 						"_     _    _ \n"
 						"--------- \n"
-						"This is a single line paragraph \n\n"
+						"This is a single line paragraph \n\n\n\n"
 						"This is a multiline paragraph\n"
 						"This is a multiline paragraph\n"
-						"This is a multiline paragraph\n\n"
+						"This is a multiline paragraph\n\n\n\n"
 						"This is another multiline paragraph\n"
 						"This is another multiline paragraph\n"
-						"This is another multiline paragraph\n\n";
+						"This is another multiline paragraph\n\n\n\n";
 
 	printf("%s\n", headerTest);
 

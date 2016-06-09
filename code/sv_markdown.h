@@ -166,7 +166,7 @@ static void sv_parse_paragraph(sv_tokenizer* tokenizer, sv_token* token)
 
 	while (tokenizer->at[charCount] != '\0')
 	{
-		if(!(tokenizer->at[charCount] == '\n' && tokenizer->at[charCount + 1] == '\n'))
+		if(tokenizer->at[charCount] != '\n' || tokenizer->at[charCount + 1] != '\n')
 		{
 			charCount++;
 		}
@@ -177,8 +177,15 @@ static void sv_parse_paragraph(sv_tokenizer* tokenizer, sv_token* token)
 	}
 
 	token->type = SV_TOKEN_PARAGRAPH;
-	token->text = tokenizer->at;
+
+	token->text = malloc(charCount + 1);
+	strncpy(token->text, tokenizer->at, charCount);
+	token->text[charCount + 1] = '\0';
+
 	token->length = charCount;
+
+	sv_trim_whitespace_end(token);
+	sv_trim_whitespace_begin(token);
 
 	tokenizer->at += charCount + 2;
 }
@@ -275,25 +282,40 @@ static sv_token sv_get_token(sv_tokenizer* tokenizer)
 
 	switch(tokenizer->at[0])
 	{
-		case '\0': {token.type = SV_TOKEN_EOF; break;}
-		case '#': //ATX headings
+		case '\0':
+		{
+			token.type = SV_TOKEN_EOF;
+			break;
+		}
+		case '#':
 		{
 			sv_parse_atx_headers(tokenizer, &token);
 			break;
 		}
-		case '*': //Thematic breaks
+		case '*':
 		{
 			sv_parse_thematic_break(tokenizer, &token, '*');
 			break;
 		}
-		case '-': //Thematic breaks
+		case '-':
 		{
 			sv_parse_thematic_break(tokenizer, &token, '-');
 			break;
 		}
-		case '_': //Thematic breaks
+		case '_':
 		{
 			sv_parse_thematic_break(tokenizer, &token, '_');
+			break;
+		}
+
+		case '\n':
+		{
+			while(tokenizer->at[0] == '\n')
+			{
+				tokenizer->at++;
+			}
+
+			token = sv_get_token(tokenizer);
 			break;
 		}
 
@@ -325,6 +347,7 @@ extern char* sv_compile_ast(char* markdown)
 		{
 			case SV_TOKEN_EOF:
 			{
+				printf("End of file");
 				parsing = false;
 			} break;
 			case SV_TOKEN_HEADING1: {printf("<h1>%.*s</h1>\n", token.length, token.text); } break;
